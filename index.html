@@ -1,70 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            background: #0f0f0f;
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .card {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
-            width: 300px;
-            padding: 20px;
-            border-radius: 20px;
-            border: 1px solid #333;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        }
-        .status-badge {
-            background: #00ff8822;
-            color: #00ff88;
-            padding: 5px 15px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: bold;
-            border: 1px solid #00ff88;
-        }
-        .qr-placeholder {
-            background: white;
-            width: 180px;
-            height: 180px;
-            margin: 20px auto;
-            border-radius: 10px;
-            padding: 10px;
-        }
-        h2 { margin: 10px 0 5px 0; font-size: 20px; }
+        body { background: #0f0f0f; color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        .card { background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%); width: 300px; padding: 25px; border-radius: 25px; border: 1px solid #333; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.7); position: relative; }
+        .status-badge { padding: 5px 15px; border-radius: 50px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; display: inline-block; }
+        .active { background: #00ff8822; color: #00ff88; border: 1px solid #00ff88; }
+        .pending { background: #ffcc0022; color: #ffcc00; border: 1px solid #ffcc00; }
+        .qr-container { background: white; width: 180px; height: 180px; margin: 20px auto; border-radius: 15px; padding: 10px; display: flex; align-items: center; justify-content: center; }
+        .qr-container img { width: 100%; height: auto; }
+        h2 { margin: 10px 0 5px 0; font-size: 22px; font-weight: 600; }
         p { color: #888; font-size: 14px; margin: 0; }
+        .footer-logo { margin-top: 20px; opacity: 0.4; font-size: 12px; letter-spacing: 2px; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="status-badge">SOCIO ACTIVO</div>
-        <div class="qr-placeholder">
-            <img src="URL_DE_TU_QR_GENERADO" width="100%">
+    <div id="app" class="card" style="display:none;">
+        <div id="status" class="status-badge">Verificando...</div>
+        <div class="qr-container">
+            <img id="qr" src="" alt="Código QR">
         </div>
-        <h2 id="userName">Cargando...</h2>
-        <p id="userDni">DNI: --------</p>
-        <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
-        <p style="color: #555;">CONFIAF PASS © 2026</p>
+        <h2 id="name">Cargando...</h2>
+        <p id="dni">DNI: ---</p>
+        <div class="footer-logo">CONFIAF PASS</div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Abre la Mini App a pantalla completa
-        
-        // Aquí es donde en el futuro conectaremos con Supabase 
-        // usando el ID de Telegram del usuario
-        const user = tg.initDataUnsafe.user;
-        if(user) {
-            document.getElementById('userName').innerText = user.first_name + " " + (user.last_name || "");
+        tg.expand();
+
+        // CONFIGURACIÓN DE SUPABASE (REEMPLAZA ESTO)
+        const SUPABASE_URL = 'TU_URL_DE_SUPABASE';
+        const SUPABASE_KEY = 'TU_KEY_ANON_DE_SUPABASE';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function loadSocio() {
+            const user = tg.initDataUnsafe.user;
+            
+            if (!user) {
+                document.body.innerHTML = "Por favor, abre esto desde Telegram";
+                return;
+            }
+
+            // Buscamos al socio por su telegram_id en tu "monstruo" de tabla
+            const { data, error } = await supabase
+                .from('socios')
+                .select('*')
+                .eq('telegram_id', user.id)
+                .single();
+
+            if (error || !data) {
+                document.getElementById('name').innerText = "Usuario no registrado";
+                document.getElementById('status').innerText = "NO ENCONTRADO";
+                document.getElementById('status').className = "status-badge pending";
+            } else {
+                document.getElementById('name').innerText = data.full_name;
+                document.getElementById('dni').innerText = "DNI: " + data.dni;
+                document.getElementById('status').innerText = data.status === 'active' ? "SOCIO ACTIVO" : "PENDIENTE DE PAGO";
+                document.getElementById('status').className = "status-badge " + (data.status === 'active' ? "active" : "pending");
+                
+                // Generamos el QR dinámico usando una API gratuita (QuickChart)
+                // El QR contiene el DNI para que el negocio lo escanee
+                document.getElementById('qr').src = `https://quickchart.io/qr?text=${data.dni}&size=200&margin=1`;
+            }
+            document.getElementById('app').style.display = 'block';
         }
+
+        loadSocio();
     </script>
 </body>
 </html>
