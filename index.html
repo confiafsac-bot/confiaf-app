@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            background: #0f0f0f;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
+            width: 300px;
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid #333;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+        .status-badge {
+            background: #00ff8822;
+            color: #00ff88;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid #00ff88;
+        }
+        .qr-placeholder {
+            background: white;
+            width: 180px;
+            height: 180px;
+            margin: 20px auto;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        h2 { margin: 10px 0 5px 0; font-size: 20px; }
+        p { color: #888; font-size: 14px; margin: 0; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="status-badge">SOCIO ACTIVO</div>
+        <div class="qr-placeholder">
+            <img src="URL_DE_TU_QR_GENERADO" width="100%">
+        </div>
+        <h2 id="userName">Cargando...</h2>
+        <p id="userDni">DNI: --------</p>
+        <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
+        <p style="color: #555;">CONFIAF PASS © 2026</p>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Abre la Mini App a pantalla completa
+        
+        // Aquí es donde en el futuro conectaremos con Supabase 
+        // usando el ID de Telegram del usuario
+        const user = tg.initDataUnsafe.user;
+        if(user) {
+            document.getElementById('userName').innerText = user.first_name + " " + (user.last_name || "");
+        }
+    </script>
+</body>
+</html>
