@@ -32,19 +32,17 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // CONFIGURACIÓN DE SUPABASE (REEMPLAZA ESTO)
-        const SUPABASE_URL = 'TU_URL_DE_SUPABASE';
-        const SUPABASE_KEY = 'TU_KEY_ANON_DE_SUPABASE';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        async function loadSocio() {
-            const user = tg.initDataUnsafe.user;
-            
-            if (!user) {
-                document.body.innerHTML = "Por favor, abre esto desde Telegram";
-                return;
-            }
-
+        // CONFIGURACIÓN DE SUPABASE
+                const SUPABASE_URL = 'https://tglwpwnxozfgnyrluvdm.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnbHdwd254b3pmZ255cmx1dmRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjA5NTUsImV4cCI6MjA4Nzc5Njk1NX0.EjjlvYZaFZ2nBd4zF7TcL0zFz56SV8MLdqt3GchbnTA'; // (Tu key completa)
+                
+                // USAR ESTA LÍNEA EXACTA:
+                const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                
+                async function loadSocio() {
+                    const user = tg.initDataUnsafe.user;
+                    // ... el resto del código usando _supabase.from('socios')...
+                }
             // Buscamos al socio por su telegram_id en tu "monstruo" de tabla
             const { data, error } = await supabase
                 .from('socios')
