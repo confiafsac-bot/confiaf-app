@@ -68,7 +68,19 @@
             }
         }
 
-        init();
+        init(// Reemplaza solo la parte de la consulta (dentro de init)
+debug("Buscando ID: " + user.id);
+const { data, error } = await _supabase
+    .from('socios')
+    .select('*')
+    .eq('telegram_id', user.id)
+    .single();
+
+if (error) {
+    // ESTO NOS DIRÁ EL PECADO ORIGINAL
+    debug("Error de Supabase: " + error.message); 
+    console.log(error);
+});
     </script>
 </body>
 </html>
