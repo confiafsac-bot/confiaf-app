@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { background: #121212; color: white; font-family: sans-serif; margin: 0; text-align: center; }
+        .container { padding: 20px; }
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; border: 2px solid #333; background: #000; }
+        .result-card { display: none; margin-top: 20px; padding: 20px; border-radius: 15px; animation: fadeIn 0.3s; }
+        .success { background: #004d26; border: 2px solid #00ff88; }
+        .error { background: #4d0000; border: 2px solid #ff4444; }
+        button { background: #0088cc; color: white; border: none; padding: 15px 30px; border-radius: 50px; font-weight: bold; margin-top: 20px; width: 100%; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Validador Confiaf</h2>
+        <div id="reader"></div>
+        
+        <div id="result" class="result-card">
+            <h3 id="res-status"></h3>
+            <p id="res-name" style="font-size: 20px; font-weight: bold; margin: 5px 0;"></p>
+            <p id="res-dni"></p>
+            <button onclick="resetScanner()">Escanear otro</button>
+        </div>
+
+        <div id="loading" style="display:none; margin-top:20px;">Verificando socio...</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const SUPABASE_URL = 'https://tglwpwnxozfgnyrluvdm.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnbHdwd254b3pmZ255cmx1dmRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMjA5NTUsImV4cCI6MjA4Nzc5Njk1NX0.EjjlvYZaFZ2nBd4zF7TcL0zFz56SV8MLdqt3GchbnTA';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const html5QrCode = new Html5Qrcode("reader");
+        const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+        function startScanner() {
+            html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess);
+        }
+
+        async function onScanSuccess(decodedText) {
+            // Detenemos el escáner para procesar
+            await html5QrCode.stop();
+            document.getElementById('loading').style.display = 'block';
+
+            // Buscamos al socio por el DNI que viene en el QR
+            const { data, error } = await _supabase
+                .from('socios')
+                .select('*')
+                .eq('dni', decodedText)
+                .single();
+
+            document.getElementById('loading').style.display = 'none';
+            const resCard = document.getElementById('result');
+            resCard.style.display = 'block';
+
+            if (data && data.status === 'active') {
+                resCard.className = 'result-card success';
+                document.getElementById('res-status').innerText = "✅ SOCIO ACTIVO";
+                document.getElementById('res-name').innerText = data.full_name;
+                document.getElementById('res-dni').innerText = "DNI: " + data.dni;
+                tg.HapticFeedback.notificationOccurred('success');
+            } else {
+                resCard.className = 'result-card error';
+                document.getElementById('res-status').innerText = "❌ NO AUTORIZADO";
+                document.getElementById('res-name').innerText = data ? data.full_name : "No encontrado";
+                document.getElementById('res-dni').innerText = "Estado: " + (data ? data.status : "Sin registro");
+                tg.HapticFeedback.notificationOccurred('error');
+            }
+        }
+
+        function resetScanner() {
+            document.getElementById('result').style.display = 'none';
+            startScanner();
+        }
+
+        // Iniciar al cargar
+        startScanner();
+    </script>
+</body>
+</html>
